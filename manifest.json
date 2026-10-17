@@ -1,0 +1,10 @@
+{
+  "name": "실제 덕트 속도·속도압 계산기",
+  "short_name": "덕트 속도압",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f6fb",
+  "theme_color": "#12345a",
+  "lang": "ko"
+}

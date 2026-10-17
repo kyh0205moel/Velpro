@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#12345a">
+<link rel="manifest" href="manifest.json">
+<title>실제 덕트 속도·속도압 계산기</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;color:#182235;background:#f2f6fb}
+*{box-sizing:border-box}body{margin:0;padding:16px 12px 32px}main{max-width:700px;margin:auto}
+header{background:#12345a;color:white;padding:22px 18px;border-radius:18px;margin-bottom:14px}
+h1{font-size:1.4rem;margin:0 0 8px}header p{margin:0;color:#e1eaf5;line-height:1.55}
+.card{background:white;border:1px solid #dfe7f1;border-radius:15px;padding:17px;margin:12px 0;box-shadow:0 4px 16px #19385c08}
+h2{font-size:1.08rem;margin:0 0 12px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+input,select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font-size:1rem;background:white;color:#182235}
+.grid{display:grid;grid-template-columns:1fr;gap:8px}
+button{width:100%;border:0;border-radius:10px;padding:13px;font-weight:750;font-size:1rem;background:#1764b0;color:white;margin-top:14px}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.result{background:#edf6ff;border:1px solid #c9e1fb;border-radius:12px;padding:13px;min-width:0}
+.result .label{font-size:.86rem;color:#405975;line-height:1.4}
+.result .value{font-size:1.35rem;font-weight:800;color:#0759a4;margin-top:5px;overflow-wrap:anywhere}
+.result .unit{font-size:.85rem;font-weight:650}
+.highlight{background:#eaf8ef;border-color:#bde7cb}
+.highlight .value{color:#16713b}
+.note{font-size:.9rem;line-height:1.6;color:#526176}
+.formula{padding:11px;background:#f7f9fc;border-radius:9px;line-height:1.8;overflow-wrap:anywhere}
+hr{border:0;border-top:1px solid #e4eaf1;margin:14px 0}
+@media(min-width:540px){body{padding-top:26px}.card{padding:21px}.grid.two{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>실제 덕트 속도·속도압 계산기</h1>
+<p>필요환기량과 목표 덕트 유속으로 계산 직경을 구한 뒤, 상용 규격을 선정하여 실제 덕트 내 유속과 속도압을 계산합니다.</p>
+</header>
+
+<section class="card">
+<h2>1. 실제 덕트 조건 입력</h2>
+<p class="note">상용 규격을 자동 선정하지 않습니다. 현장에서 실제로 사용하거나 검토 중인 덕트 직경을 직접 입력하세요.</p>
+<div class="grid two">
+  <div>
+    <label for="q">실제 환기량 Q (m³/min)</label>
+    <input id="q" type="number" min="0" step="any" value="30" inputmode="decimal">
+  </div>
+  <div>
+    <label for="diameter">실제 덕트 직경 D (mm)</label>
+    <input id="diameter" type="number" min="0" step="any" value="200" inputmode="decimal">
+  </div>
+</div>
+<button id="calculate" type="button">실제 유속 및 속도압 계산</button>
+</section>
+
+<section class="card">
+<h2>2. 계산 결과</h2>
+<div class="results">
+  <div class="result"><div class="label">입력한 실제 덕트 직경</div><div class="value"><span id="actualD">—</span> <span class="unit">mm</span></div></div>
+  <div class="result"><div class="label">선정 덕트 단면적</div><div class="value"><span id="area">—</span> <span class="unit">m²</span></div></div>
+  <div class="result highlight"><div class="label">실제 덕트 내 유속</div><div class="value"><span id="actualV">—</span> <span class="unit">m/s</span></div></div>
+  <div class="result"><div class="label">실제 속도압</div><div class="value"><span id="pressurePa">—</span> <span class="unit">Pa</span></div></div>
+  <div class="result"><div class="label">실제 속도압</div><div class="value"><span id="pressureMm">—</span> <span class="unit">mmH₂O</span></div></div>
+</div>
+<p class="note" id="status" aria-live="polite">입력값을 확인하고 계산 버튼을 누르세요.</p>
+<hr>
+<h2>계산식</h2>
+<div class="formula">
+  실제 유속: <b>V실제 = (Q/60) ÷ [π(D/1000)²/4]</b><br>
+  속도압: <b>VP = ½ρV실제²</b> (Pa)<br>
+  환산: <b>mmH₂O = Pa ÷ 9.80665</b>
+</div>
+<p class="note">Q는 m³/min, 입력 직경 D는 mm, 속도는 m/s 기준입니다. 속도압은 교재의 V = 4.043 × √VP 공식에서 역산하므로 공기 밀도를 별도로 입력하지 않습니다. 상용 규격 선정 및 마찰손실 계산은 포함하지 않습니다.</p>
+</section>
+
+<section class="card">
+<h2>3. 속도압으로 실제 유속 역산</h2>
+<p class="note">교재의 공식 V = 4.043 × √VP를 적용합니다. VP는 mmH₂O 단위로 입력하세요. 이 결과는 속도압으로 역산한 유속이며, 선정 덕트 직경과 환기량으로 계산한 실제 유속과 비교할 수 있습니다.</p>
+<div class="grid two">
+  <div>
+    <label for="vpInput">속도압 VP (mmH₂O)</label>
+    <input id="vpInput" type="number" min="0" step="any" value="6.12" inputmode="decimal">
+  </div>
+  <div>
+    <label for="vpVelocity">속도압으로 역산한 유속 (m/s)</label>
+    <input id="vpVelocity" type="text" readonly value="—">
+  </div>
+</div>
+<div class="formula" style="margin-top:10px">
+  <b>V = 4.043 × √VP</b><br>
+  예: VP = 6.12 mmH₂O이면 V ≈ 10.00 m/s
+</div>
+</section>
+
+<section class="card">
+<h2>참고</h2>
+<p class="note">이 계산기는 입력한 실제 덕트 직경과 환기량으로 유속 및 속도압만 계산합니다. 상용 규격 선정이나 마찰손실 계산은 하지 않습니다.</p>
+</section>
+</main>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ const fmt = (n,d=3) => Number(n).toLocaleString('ko-KR',{minimumFractionDigits:0,maximumFractionDigits:d});
+ function calculate() {
+   const qRaw=$('q').value.trim(), dRaw=$('diameter').value.trim();
+   const q=Number(qRaw), diameterMm=Number(dRaw);
+   const status=$('status');
+   if(qRaw===''||dRaw===''||!Number.isFinite(q)||!Number.isFinite(diameterMm)||q<=0||diameterMm<=0) {
+     ['actualD','area','actualV','pressurePa','pressureMm'].forEach(id=>$(id).textContent='—');
+     status.textContent='환기량과 실제 덕트 직경은 0보다 큰 숫자로 입력하세요.';
+     return;
+   }
+   const qSec=q/60;
+   const d=diameterMm/1000;
+   const area=Math.PI*d*d/4;
+   const actualV=qSec/area;
+   // 교재 공식 V = 4.043 × √VP (VP in mmH₂O)
+   const vpMm=Math.pow(actualV/4.043,2);
+   const vpPa=vpMm*9.80665;
+   $('actualD').textContent=fmt(diameterMm,2);
+   $('area').textContent=fmt(area,6);
+   $('actualV').textContent=fmt(actualV,3);
+   $('pressurePa').textContent=fmt(vpPa,3);
+   $('pressureMm').textContent=fmt(vpMm,3);
+   status.textContent='입력한 실제 덕트 직경 '+fmt(diameterMm,2)+' mm 기준으로 계산했습니다.';
+ }
+ function calculateVelocityFromVP() {
+   const raw = $('vpInput').value.trim();
+   const vp = Number(raw);
+   if (raw === '' || !Number.isFinite(vp) || vp < 0) {
+     $('vpVelocity').value = '0 이상의 숫자를 입력하세요';
+     return;
+   }
+   $('vpVelocity').value = fmt(4.043 * Math.sqrt(vp), 3) + ' m/s';
+ }
+ $('calculate').addEventListener('click',calculate);
+ ['q','diameter'].forEach(id=>$(id).addEventListener('input',calculate));
+ $('vpInput').addEventListener('input',calculateVelocityFromVP);
+ calculate();
+ calculateVelocityFromVP();
+ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+   window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+ }
+})();
+</script>
+</body>
+</html>
